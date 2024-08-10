@@ -16,6 +16,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -26,9 +30,31 @@ import androidx.navigation.NavHostController
 fun NoteScreen(navHostController: NavHostController) {
     val viewModel = hiltViewModel<NoteViewModel>()
     val noteList = viewModel.noteListState.collectAsState()
+    var showAddNote by remember {
+        mutableStateOf(false)
+    }
+    val addNoteState = viewModel.addNoteState.collectAsState()
 
     LaunchedEffect(key1 = Unit) {
         viewModel.loadNoteList()
+    }
+    LaunchedEffect(key1 = addNoteState.value) {
+        when (addNoteState.value) {
+            is AddNoteUiState.Success -> {
+                showAddNote = false
+            }
+
+            is AddNoteUiState.Error -> {
+                showAddNote = false
+            }
+
+            is AddNoteUiState.Loading -> {
+            }
+
+            else -> {
+                // Do nothing
+            }
+        }
     }
 
     Surface {
@@ -52,11 +78,23 @@ fun NoteScreen(navHostController: NavHostController) {
             FloatingActionButton(
                 onClick = {
                     // Add note
+                    showAddNote = true
                 },
                 modifier = Modifier.align(Alignment.BottomEnd),
             ) {
                 Image(imageVector = Icons.Rounded.AddCircle, contentDescription = "add")
             }
+        }
+        if (showAddNote) {
+            AddNoteScreen(
+                navHostController = navHostController,
+                onClick = {
+                    viewModel.addNote(it)
+                },
+                onDismiss = {
+                    showAddNote = false
+                },
+            )
         }
     }
 }
