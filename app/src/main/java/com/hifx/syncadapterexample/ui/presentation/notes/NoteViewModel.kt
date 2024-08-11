@@ -2,22 +2,37 @@ package com.hifx.syncadapterexample.ui.presentation.notes
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hifx.syncadapterexample.ui.presentation.notes.db.DatabaseContentObserver
 import com.hifx.syncadapterexample.ui.presentation.notes.db.NoteDbHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class NoteViewModel @Inject() constructor(
     val noteDbHelper: NoteDbHelper,
+    val databaseContentObserver: DatabaseContentObserver,
 ) : ViewModel() {
 
     private val _noteListState = MutableStateFlow<List<NoteItemModel>?>(null)
     val noteListState = _noteListState.asStateFlow()
     private val _addNoteState = MutableStateFlow<AddNoteUiState>(AddNoteUiState.Idle)
     val addNoteState = _addNoteState.asStateFlow()
+
+    init {
+        databaseContentObserver.register()
+    }
+
+    fun observeDataChange() {
+        viewModelScope.launch {
+            databaseContentObserver.dataChangeFlow.collectLatest { state ->
+                println("NoteViewModel - Data state change collected - $state")
+            }
+        }
+    }
 
     fun loadNoteList() {
         viewModelScope.launch {
@@ -42,5 +57,10 @@ class NoteViewModel @Inject() constructor(
                 },
             )
         }
+    }
+
+    override fun onCleared() {
+        databaseContentObserver.unregister()
+        super.onCleared()
     }
 }

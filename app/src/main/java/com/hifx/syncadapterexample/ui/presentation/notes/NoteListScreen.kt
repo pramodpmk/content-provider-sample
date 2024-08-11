@@ -37,6 +37,7 @@ fun NoteScreen(navHostController: NavHostController) {
 
     LaunchedEffect(key1 = Unit) {
         viewModel.loadNoteList()
+        viewModel.observeDataChange()
     }
     LaunchedEffect(key1 = addNoteState.value) {
         when (addNoteState.value) {

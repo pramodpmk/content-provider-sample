@@ -62,6 +62,7 @@ class NoteContentProvider() : ContentProvider() {
                 }
                 temp
             }
+
             CODE_NOTES_WITH_ID -> {
                 val id = ContentUris.parseId(uri).toInt()
                 val notes = noteDao?.getNoteItem(id)
@@ -87,8 +88,9 @@ class NoteContentProvider() : ContentProvider() {
                 date = it.getAsLong("date"),
             )
             val result = noteDao?.insertNote(note)
-            context?.contentResolver?.notifyChange(uri, null)
-            return Uri.withAppendedPath(noteAllUri, result.toString())
+            val resultUri = Uri.withAppendedPath(noteAllUri, result.toString())
+            context?.contentResolver?.notifyChange(resultUri, null)
+            return resultUri
         }
         return null
     }
