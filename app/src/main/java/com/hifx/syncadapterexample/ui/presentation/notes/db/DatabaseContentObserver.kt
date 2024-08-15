@@ -1,10 +1,15 @@
 package com.hifx.syncadapterexample.ui.presentation.notes.db
 
+import android.accounts.Account
+import android.accounts.AccountManager
+import android.app.Activity
+import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
 import android.content.UriMatcher
 import android.database.ContentObserver
 import android.net.Uri
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +19,11 @@ import javax.inject.Inject
 class DatabaseContentObserver @Inject constructor(val context: Context) {
 
     private lateinit var noteContentObserver: NoteContentObserver
+    private lateinit var account: Account
+
+    init {
+        account = createSyncAccount()
+    }
 
     val AUTHORITY = "com.promode.note.provider"
     val noteAllUri: Uri = Uri.parse("content://$AUTHORITY/notes")
@@ -48,6 +58,7 @@ class DatabaseContentObserver @Inject constructor(val context: Context) {
                         val id = ContentUris.parseId(uri)
                         // Handle the change, you now have the specific ID of the changed row
                         println("Content changed for row ID: $id")
+                        ContentResolver.requestSync(account, "com.promode.note.provider", Bundle())
                         _dataChangeFlow.value = "Changed uri - $uri id - $id"
                     }
                     else -> {
@@ -56,6 +67,19 @@ class DatabaseContentObserver @Inject constructor(val context: Context) {
                 }
             }
         }
+    }
+
+    private fun createSyncAccount(): Account {
+        val accountType = "com.hifx.syncadapterexample"
+        val accountName = "DefaultAccount"
+        val account = Account(accountName, accountType)
+        val accountManager = context.getSystemService(Activity.ACCOUNT_SERVICE) as AccountManager
+        if (accountManager.addAccountExplicitly(account, null, null)) {
+            // Account created
+        } else {
+            // Account already exists or error occurred
+        }
+        return account
     }
 
     private val _dataChangeFlow = MutableStateFlow<String>("")

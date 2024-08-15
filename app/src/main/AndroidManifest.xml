@@ -8,6 +8,12 @@
     <uses-permission android:name="android.permission.WRITE_CONTACTS" />
     <permission android:name="com.promode.note.permission.READ_NOTE" />
 
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -37,6 +43,28 @@
             android:enabled="true"
             android:readPermission="com.promode.note.permission.READ_NOTE"
             android:grantUriPermissions="true" />
+        <service
+            android:name=".ui.presentation.notes.db.sync.NoteSyncService"
+            android:exported="true"
+            android:permission="android.permission.BIND_SYNC_ADAPTER">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/syncadapter" />
+        </service>
+
+        <service
+            android:name=".ui.presentation.notes.db.sync.NoteAuthenticatorService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator" />
+        </service>
     </application>
 
 </manifest>

@@ -1,5 +1,8 @@
 package com.hifx.syncadapterexample
 
+import android.accounts.Account
+import android.accounts.AccountManager
+import android.content.ContentResolver
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,15 +20,35 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private lateinit var navHostController: NavHostController
+    private lateinit var account: Account
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        account = createSyncAccount()
+        ContentResolver.setIsSyncable(account, "com.promode.note.provider", 1)
+        ContentResolver.setSyncAutomatically(account, "com.promode.note.provider", true)
+        ContentResolver.addPeriodicSync(account, "com.promode.note.provider", Bundle(), 60 * 60)
+        // Request immediate sync
+        ContentResolver.requestSync(account, "com.promode.note.provider", Bundle())
         setContent {
             SyncAdapterExampleTheme {
                 navHostController = rememberNavController()
                 SetupNavGraph(navHostController = navHostController)
             }
         }
+    }
+
+    private fun createSyncAccount(): Account {
+        val accountType = "com.hifx.syncadapterexample"
+        val accountName = "DefaultAccount"
+        val account = Account(accountName, accountType)
+        val accountManager = getSystemService(ACCOUNT_SERVICE) as AccountManager
+        if (accountManager.addAccountExplicitly(account, null, null)) {
+            // Account created
+        } else {
+            // Account already exists or error occurred
+        }
+        return account
     }
 }
 
